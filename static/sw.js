@@ -12,6 +12,12 @@ importScripts("/scram/scramjet.all.js");
 const { ScramjetServiceWorker } = $scramjetLoadWorker();
 const scramjet = new ScramjetServiceWorker();
 
+// Take control immediately so navigations to /scramjet/... are intercepted without reload
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => {
+	event.waitUntil(self.clients.claim());
+});
+
 async function handleRequest(event) {
 	await scramjet.loadConfig();
 	if (scramjet.route(event)) {

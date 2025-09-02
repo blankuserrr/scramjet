@@ -2,21 +2,19 @@
  * @fileoverview Contains the controller class.
  */
 
+import { ScramjetFrame } from "@/controller/frame";
 import {
-	codecDecode,
-	codecEncode,
-	config,
-	loadCodecs,
-	setConfig,
+    codecDecode,
+    codecEncode,
+    config,
+    loadCodecs,
+    setConfig,
 } from "@/shared/index";
 import { ScramjetConfig, ScramjetInitConfig } from "@/types";
-import { ScramjetFrame } from "@/controller/frame";
 import { MessageW2C } from "@/worker";
 import {
-	ScramjetEvents,
-	ScramjetGlobalDownloadEvent,
-	ScramjetGlobalEvent,
-	ScramjetGlobalEvents,
+    ScramjetGlobalDownloadEvent,
+    ScramjetGlobalEvents
 } from "@client/events";
 
 /**
@@ -252,7 +250,7 @@ export class ScramjetController extends EventTarget {
 	 * @returns A Promise to either return the initialized IndexedDB or to handle IndexedDB rejections.
 	 */
 	async openIDB(): Promise<IDBDatabase> {
-		const db = indexedDB.open("$scramjet", 1);
+		const db = indexedDB.open("$scramjet", 2);
 
 		return new Promise<IDBDatabase>((resolve, reject) => {
 			db.onsuccess = async () => {

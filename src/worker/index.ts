@@ -2,14 +2,14 @@
  * @fileoverview Contains the core Service Worker logic for Scramjet, which handles the initial request interception and handles client management for the Scramjet service.
  */
 
+import { setConfig } from "@/shared";
+import { CookieStore } from "@/shared/cookie";
+import { ScramjetConfig } from "@/types";
 import { FakeServiceWorker } from "@/worker/fakesw";
 import { handleFetch } from "@/worker/fetch";
-import BareClient from "@mercuryworkshop/bare-mux";
-import { ScramjetConfig } from "@/types";
-import { asyncSetWasm } from "@rewriters/wasm";
-import { CookieStore } from "@/shared/cookie";
-import { config, loadCodecs, setConfig } from "@/shared";
 import { ScramjetDownload } from "@client/events";
+import BareClient from "@mercuryworkshop/bare-mux";
+import { asyncSetWasm } from "@rewriters/wasm";
 
 /**
  * Main `ScramjetServiceWorker` class created by the `$scramjetLoadWorker` factory, which handles routing the proxy and contains the core logic for request interception.
@@ -51,7 +51,26 @@ export class ScramjetServiceWorker extends EventTarget {
 		super();
 		this.client = new BareClient();
 
-		const db = indexedDB.open("$scramjet", 1);
+		const db = indexedDB.open("$scramjet", 2);
+
+		db.onupgradeneeded = () => {
+			const res = db.result;
+			if (!res.objectStoreNames.contains("config")) {
+				res.createObjectStore("config");
+			}
+			if (!res.objectStoreNames.contains("cookies")) {
+				res.createObjectStore("cookies");
+			}
+			if (!res.objectStoreNames.contains("redirectTrackers")) {
+				res.createObjectStore("redirectTrackers");
+			}
+			if (!res.objectStoreNames.contains("referrerPolicies")) {
+				res.createObjectStore("referrerPolicies");
+			}
+			if (!res.objectStoreNames.contains("publicSuffixList")) {
+				res.createObjectStore("publicSuffixList");
+			}
+		};
 
 		db.onsuccess = () => {
 			const res = db.result;
@@ -104,7 +123,9 @@ export class ScramjetServiceWorker extends EventTarget {
 	async dispatch(client: Client, data: MessageW2C): Promise<MessageC2W> {
 		const token = this.synctoken++;
 		let cb: (val: MessageC2W) => void;
-		const promise: Promise<MessageC2W> = new Promise((r) => (cb = r));
+		const promise: Promise<MessageC2W> = new Promise((resolve) => {
+			cb = resolve;
+		});
 		this.syncPool[token] = cb;
 		data.scramjet$token = token;
 
@@ -127,7 +148,26 @@ export class ScramjetServiceWorker extends EventTarget {
 	async loadConfig() {
 		if (this.config) return;
 
-		const request = indexedDB.open("$scramjet", 1);
+		const request = indexedDB.open("$scramjet", 2);
+
+		request.onupgradeneeded = () => {
+			const db = request.result;
+			if (!db.objectStoreNames.contains("config")) {
+				db.createObjectStore("config");
+			}
+			if (!db.objectStoreNames.contains("cookies")) {
+				db.createObjectStore("cookies");
+			}
+			if (!db.objectStoreNames.contains("redirectTrackers")) {
+				db.createObjectStore("redirectTrackers");
+			}
+			if (!db.objectStoreNames.contains("referrerPolicies")) {
+				db.createObjectStore("referrerPolicies");
+			}
+			if (!db.objectStoreNames.contains("publicSuffixList")) {
+				db.createObjectStore("publicSuffixList");
+			}
+		};
 
 		return new Promise<void>((resolve, reject) => {
 			request.onsuccess = async () => {

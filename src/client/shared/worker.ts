@@ -1,10 +1,17 @@
+import { ScramjetClient } from "@client/index";
 import { BareMuxConnection } from "@mercuryworkshop/bare-mux";
 import { rewriteUrl } from "@rewriters/url";
-import { ScramjetClient } from "@client/index";
 
 export default function (client: ScramjetClient, _self: typeof globalThis) {
 	client.Proxy("Worker", {
 		construct(ctx) {
+			try {
+				const originalUrl = new URL(String(ctx.args[0]), client.url);
+				if (originalUrl.pathname.startsWith("/baremux/")) {
+					return ctx.call();
+				}
+			} catch {}
+
 			ctx.args[0] = rewriteUrl(ctx.args[0], client.meta) + "?dest=worker";
 
 			if (ctx.args[1] && ctx.args[1].type === "module") {
@@ -32,6 +39,13 @@ export default function (client: ScramjetClient, _self: typeof globalThis) {
 	// sharedworkers can only be constructed from window
 	client.Proxy("SharedWorker", {
 		construct(ctx) {
+			try {
+				const originalUrl = new URL(String(ctx.args[0]), client.url);
+				if (originalUrl.pathname.startsWith("/baremux/")) {
+					return ctx.call();
+				}
+			} catch {}
+
 			ctx.args[0] = rewriteUrl(ctx.args[0], client.meta) + "?dest=sharedworker";
 
 			if (ctx.args[1] && typeof ctx.args[1] === "string")

@@ -35,7 +35,7 @@ fi
 cd staticbuild
 echo "Demo server starting at http://localhost:3000"
 echo "TypeDoc available at http://localhost:3000/typedoc"
-npx serve -l 3000 &
+npx serve -s -l 3000 &
 SERVER_PID=$!
 
 wait $SERVER_PID

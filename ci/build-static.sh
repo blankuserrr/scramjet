@@ -5,6 +5,7 @@ rm -rf $DST
 mkdir -p $DST
 
 cp -r node_modules/@mercuryworkshop/bare-mux/dist/ $DST/baremux
+cp -r node_modules/@mercuryworkshop/bare-as-module3/dist/ $DST/baremod
 cp -r node_modules/@mercuryworkshop/epoxy-transport/dist/ $DST/epoxy
 cp -r node_modules/@mercuryworkshop/libcurl-transport/dist/ $DST/libcurl
 cp -r assets/ $DST/assets

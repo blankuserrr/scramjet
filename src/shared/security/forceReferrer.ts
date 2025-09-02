@@ -29,9 +29,27 @@ const SITE_HIERARCHY: Record<SiteDirective, number> = {
  * @returns Promise that resolves to the database connection
  */
 async function getDB(): Promise<IDBDatabase> {
-	const request = indexedDB.open("$scramjet", 1);
+	const request = indexedDB.open("$scramjet", 2);
 
 	return new Promise((resolve, reject) => {
+		request.onupgradeneeded = () => {
+			const db = request.result;
+			if (!db.objectStoreNames.contains("config")) {
+				db.createObjectStore("config");
+			}
+			if (!db.objectStoreNames.contains("cookies")) {
+				db.createObjectStore("cookies");
+			}
+			if (!db.objectStoreNames.contains("redirectTrackers")) {
+				db.createObjectStore("redirectTrackers");
+			}
+			if (!db.objectStoreNames.contains("referrerPolicies")) {
+				db.createObjectStore("referrerPolicies");
+			}
+			if (!db.objectStoreNames.contains("publicSuffixList")) {
+				db.createObjectStore("publicSuffixList");
+			}
+		};
 		request.onerror = () => reject(request.error);
 		request.onsuccess = () => resolve(request.result);
 	});
