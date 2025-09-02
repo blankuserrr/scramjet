@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { setupPage } from "./util/setupPage";
 
 test.describe("Google", () => {

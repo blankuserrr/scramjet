@@ -9,10 +9,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use oxc::{
-	allocator::{Allocator, StringBuilder},
-	diagnostics::NamedSource,
-};
+use oxc::diagnostics::NamedSource;
 use rewriter::NativeRewriter;
 
 mod rewriter;

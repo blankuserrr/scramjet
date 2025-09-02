@@ -4,15 +4,13 @@ use oxc::{
 	allocator::{Allocator, StringBuilder},
 	ast::ast::{
 		AssignmentExpression, AssignmentTarget, AssignmentTargetMaybeDefault,
-		AssignmentTargetProperty, AssignmentTargetPropertyIdentifier, BindingPattern,
-		BindingPatternKind, BindingProperty, CallExpression, ComputedMemberExpression,
-		DebuggerStatement, ExportAllDeclaration, ExportNamedDeclaration, Expression, ForStatement,
-		ForStatementInit, ForStatementLeft, FormalParameter, FunctionBody, IdentifierReference,
-		ImportDeclaration, ImportExpression, MemberExpression, MetaProperty, NewExpression,
-		ObjectAssignmentTarget, ObjectExpression, ObjectPattern, ObjectPropertyKind,
-		PrivateIdentifier, PropertyKey, ReturnStatement, SimpleAssignmentTarget, Statement,
-		StringLiteral, ThisExpression, UnaryExpression, UnaryOperator, UpdateExpression,
-		VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+		AssignmentTargetProperty, BindingPattern, BindingPatternKind, CallExpression,
+		ComputedMemberExpression, DebuggerStatement, ExportAllDeclaration, ExportNamedDeclaration,
+		Expression, ForStatement, ForStatementInit, ForStatementLeft, FunctionBody,
+		IdentifierReference, ImportDeclaration, ImportExpression, MemberExpression, MetaProperty,
+		NewExpression, ObjectAssignmentTarget, ObjectExpression, ObjectPropertyKind, PropertyKey,
+		SimpleAssignmentTarget, Statement, StringLiteral, UnaryExpression, UnaryOperator,
+		UpdateExpression, VariableDeclaration, VariableDeclarationKind,
 	},
 	ast_visit::{Visit, walk},
 	span::{Atom, GetSpan, Span},
@@ -63,12 +61,6 @@ where
 			.add(rewrite!(url.span.shrink(1), Replace { text }));
 	}
 
-	fn rewrite_ident(&mut self, name: &Atom, span: Span) {
-		if UNSAFE_GLOBALS.contains(&name.as_str()) {
-			self.jschanges.add(rewrite!(span, WrapFn { enclose: true }));
-		}
-	}
-
 	fn walk_computed_member_expression(&mut self, it: &ComputedMemberExpression<'data>) {
 		match &it.expression {
 			Expression::NullLiteral(_)
@@ -117,7 +109,7 @@ where
 					// correct thing to do here is to change it into an AsignmentTargetPropertyProperty
 					// { $sj_location: location } = self;
 					if UNSAFE_GLOBALS.contains(&p.binding.name.to_string().as_str()) {
-    					let mut tempvar = false;
+						let mut tempvar = false;
 						if p.binding.name == "location" {
 							tempvar = true;
 							*location_assigned = true;
@@ -166,20 +158,20 @@ where
 						}
 					}
 
-					let mut target;
+					let target;
 
 					if let Some(t) = p.binding.as_assignment_target() {
-					    target = t;
+						target = t;
 					} else {
-    					match &p.binding {
-    						AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(d) => {
-                                target = &d.binding;
-                                // { location: x = parent } = {};
-    							// we still need to rewrite whatever stuff might be in the default expression
-    							walk::walk_expression(self, &d.init);
-                            }
-                            _=>unreachable!()
-                        }
+						match &p.binding {
+							AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(d) => {
+								target = &d.binding;
+								// { location: x = parent } = {};
+								// we still need to rewrite whatever stuff might be in the default expression
+								walk::walk_expression(self, &d.init);
+							}
+							_ => unreachable!(),
+						}
 					}
 
 					match &target {
@@ -346,8 +338,13 @@ where
 		}
 	}
 
-	fn handle_for_of_in(&mut self, left: &ForStatementLeft<'data>, right: &Expression<'data>, body: &Statement<'data>) {
-    	let mut restids: Vec<Atom<'data>> = Vec::new();
+	fn handle_for_of_in(
+		&mut self,
+		left: &ForStatementLeft<'data>,
+		right: &Expression<'data>,
+		body: &Statement<'data>,
+	) {
+		let mut restids: Vec<Atom<'data>> = Vec::new();
 		let mut location_assigned: bool = false;
 		if let ForStatementLeft::VariableDeclaration(v) = &left {
 			self.handle_var_declarator(&v, &mut restids, &mut location_assigned);
@@ -672,10 +669,10 @@ where
 	}
 
 	fn visit_for_of_statement(&mut self, it: &oxc::ast::ast::ForOfStatement<'data>) {
-    	self.handle_for_of_in(&it.left, &it.right, &it.body);
+		self.handle_for_of_in(&it.left, &it.right, &it.body);
 	}
 	fn visit_for_in_statement(&mut self, it: &oxc::ast::ast::ForInStatement<'data>) {
-    	self.handle_for_of_in(&it.left, &it.right, &it.body);
+		self.handle_for_of_in(&it.left, &it.right, &it.body);
 	}
 
 	fn visit_function_body(&mut self, it: &FunctionBody<'data>) {

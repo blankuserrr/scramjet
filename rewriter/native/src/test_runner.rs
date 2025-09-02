@@ -2,7 +2,7 @@
 mod test {
 	use std::fs;
 
-	use crate::{RewriterOptions, rewriter::NativeRewriter};
+	use crate::rewriter::NativeRewriter;
 	use boa_engine::{
 		Context, NativeFunction, Source, js_str, js_string,
 		object::ObjectInitializer,
